@@ -23,8 +23,7 @@ func run() error {
 	err := godotenv.Load()
 
 	if err != nil {
-		fmt.Printf("Error loading .env file")
-		return err
+		return fmt.Errorf("%w", err)
 	}
 
 	cfg := config.MustLoad()
@@ -33,8 +32,7 @@ func run() error {
 	log, err := logging.Setup(cfg.Env)
 
 	if err != nil {
-		fmt.Printf("failed to setup logging: %v", err)
-		return err
+		return fmt.Errorf("%w", err)
 	}
 
 	log.Info("Starting time-manager", slog.String("env", cfg.Env))
