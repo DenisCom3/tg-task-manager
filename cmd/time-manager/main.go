@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"time-manager/internal/config"
+	"time-manager/internal/logging"
 
 	"github.com/joho/godotenv"
 )
@@ -22,13 +23,21 @@ func run() error {
 	err := godotenv.Load()
 
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		fmt.Printf("Error loading .env file")
 		return err
 	}
 
 	cfg := config.MustLoad()
 
-	fmt.Println(cfg.Env)
+	
+	log, err := logging.Setup(cfg.Env)
+
+	if err != nil {
+		fmt.Printf("failed to setup logging: %v", err)
+		return err
+	}
+
+	log.Info("Starting time-manager", slog.String("env", cfg.Env))
 
 	return nil
 }
