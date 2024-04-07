@@ -1,2 +1,2 @@
 run:
-	go run cmd/tima-manager/main.go
+	go run cmd/time-manager/main.go
