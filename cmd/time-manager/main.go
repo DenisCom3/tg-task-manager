@@ -52,19 +52,18 @@ func run() error {
 		ID: 1,
 		Title: "demo1",
 		Time:  time.Now(),
-		Owner: "denis",
-		IsDone:  false,
+		
 	}
 
 
 	eService := service.NewEventService(eventEntity, event.NewRepo(storage))
 
-	err = eService.Save()
+	e, err := eService.GetByName()
 
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-
+	fmt.Println(e.Title)
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+	"time-manager/internal/entity"
 	"time-manager/internal/storage"
 
 	"github.com/mattn/go-sqlite3"
@@ -50,5 +51,21 @@ func (s *Storage) Save(name string, time time.Time) error {
 	}
 
 	return nil
+
+}
+
+func (s *Storage) GetByName(name string) (*entity.Event, error) {
+	const op = "storage.sqlite.GetByName"
+
+	stmt, err := s.db.Prepare("SELECT id, name, time FROM events WHERE name = ?")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	var id int
+	var title string
+	var time time.Time
+	stmt.QueryRow(name).Scan(&id, &title, &time)
+	
+	return &entity.Event{ID: id, Title: title, Time: time}, nil
 
 }
