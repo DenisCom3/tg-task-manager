@@ -1,13 +1,19 @@
 package event
 
-import "database/sql"
+import (
+	"time"
+)
 
 type Repository struct {
-	conn *sql.DB
+	store Storage
 }
 
-func newRepo(conn *sql.DB) Repository {
+type Storage interface {
+	Save(name string, time time.Time) error
+}
+
+func NewRepo(s Storage) Repository {
 	return Repository{
-		conn: conn,
+		store: s,
 	}
 }

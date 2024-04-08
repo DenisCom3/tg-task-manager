@@ -3,8 +3,13 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"time"
+	"time-manager/internal/adapter/sqlite-repo/event"
 	"time-manager/internal/config"
+	"time-manager/internal/entity"
 	"time-manager/internal/logging"
+	"time-manager/internal/service"
+	"time-manager/internal/storage/sqlite"
 
 	"github.com/joho/godotenv"
 )
@@ -36,6 +41,30 @@ func run() error {
 	}
 
 	log.Info("Starting time-manager", slog.String("env", cfg.Env))
+
+	storage, err := sqlite.New(cfg.StoragePath)
+
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	eventEntity := entity.Event{
+		ID: 1,
+		Title: "demo1",
+		Time:  time.Now(),
+		Owner: "denis",
+		IsDone:  false,
+	}
+
+
+	eService := service.NewEventService(eventEntity, event.NewRepo(storage))
+
+	err = eService.Save()
+
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
 
 	return nil
 }
