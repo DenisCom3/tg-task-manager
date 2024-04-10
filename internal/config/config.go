@@ -13,6 +13,7 @@ type Config struct {
 	Env          string `yaml:"env" env-default:"development"`
 	StoragePath  string `yaml:"storage_path" env-required:"true"`
 	LogPath      string `yaml:"log_path" env-required:"true"`
+	TelegramToken string `yaml:"telegram_bot_token" env-required:"true"`
 	HTTPServer   `yaml:"http_server"`
 }
 

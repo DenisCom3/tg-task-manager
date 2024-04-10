@@ -28,11 +28,11 @@ func (e EventService) Save() error {
 	return nil
 }
 
-func (e EventService) GetByName() (*entity.Event, error) {
+func (e EventService) GetByName() (entity.Event, error) {
 
 	event, err := e.repo.GetByName(e.event.Title)
 	if err != nil {
-		return nil, err
+		return entity.Event{}, err
 	}
 
 	return event, nil

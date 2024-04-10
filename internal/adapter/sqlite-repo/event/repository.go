@@ -11,7 +11,7 @@ type Repository struct {
 
 type Storage interface {
 	Save(name string, time time.Time) error
-	GetByName(name string) (*entity.Event, error)
+	GetByName(name string) (entity.Event, error)
 }
 
 func NewRepo(s Storage) Repository {
