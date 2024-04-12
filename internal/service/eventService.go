@@ -6,20 +6,20 @@ import (
 )
 
 type EventService struct {
-	event entity.Event
+	Event *entity.Event
 	repo  event.Repository
 }
 
 func NewEventService(event entity.Event, repo event.Repository) EventService {
 
 	return EventService{
-		event: event,
+		Event: &event,
 		repo:  repo,
 	}
 }
 
 func (e EventService) Save() error {
-	err := e.repo.Save(e.event)
+	err := e.repo.Save(*e.Event)
 
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func (e EventService) Save() error {
 
 func (e EventService) GetByName() (entity.Event, error) {
 
-	event, err := e.repo.GetByName(e.event.Title)
+	event, err := e.repo.GetByName(e.Event.Title)
 	if err != nil {
 		return entity.Event{}, err
 	}

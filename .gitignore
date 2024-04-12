@@ -1,4 +1,4 @@
 /config/config.yaml
 .env
 storage/storage.db
-storage/logs/go.log
+storage/logs/*

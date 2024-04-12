@@ -1,7 +1,7 @@
 package usecase
 
 type EventService interface {
-	save()
+	Save() error
 }
 
 type SaveEvent struct {

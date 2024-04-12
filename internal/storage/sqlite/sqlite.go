@@ -66,6 +66,6 @@ func (s *Storage) GetByName(name string) (entity.Event, error) {
 	var time time.Time
 	stmt.QueryRow(name).Scan(&id, &title, &time)
 	
-	return entity.Event{ID: id, Title: title, Time: time}, nil
+	return entity.Event{ID: &id, Title: title, Time: time}, nil
 
 }

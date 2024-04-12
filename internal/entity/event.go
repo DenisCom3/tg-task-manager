@@ -3,7 +3,7 @@ package entity
 import "time"
 
 type Event struct {
-	ID        int
+	ID        *int
 	Title     string
 	Time      time.Time
 	// Owner     string
