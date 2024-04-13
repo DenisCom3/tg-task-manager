@@ -10,7 +10,7 @@ import (
 
 func (r *Repository) Save(event entity.Event) error {
 	
-	err := r.store.Save(event.Title, event.Time)
+	err := r.store.Save(event.Title, event.Time, event.Status)
 	if err != nil {
 		return err
 	}

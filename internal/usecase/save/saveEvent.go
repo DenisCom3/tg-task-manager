@@ -1,4 +1,4 @@
-package usecase
+package save
 
 type EventService interface {
 	Save() error

@@ -10,8 +10,9 @@ type Repository struct {
 }
 
 type Storage interface {
-	Save(name string, time time.Time) error
+	Save(name string, time time.Time, status string) error
 	GetByName(name string) (entity.Event, error)
+	GetAllWithStatus(status string) ([]entity.Event, error)
 }
 
 func NewRepo(s Storage) Repository {

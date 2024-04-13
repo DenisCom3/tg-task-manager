@@ -9,7 +9,7 @@ import (
 	"time-manager/internal/entity"
 	"time-manager/internal/logging/sl"
 	"time-manager/internal/service"
-	"time-manager/internal/usecase"
+	"time-manager/internal/usecase/save"
 
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
@@ -23,11 +23,12 @@ func CreateTask (log *slog.Logger, repo event.Repository) func(bot *telego.Bot, 
 	
 	return func (bot *telego.Bot, update telego.Update)  {
 		messageText := update.Message.Text
-		arr := strings.Split(messageText, "в")
+		arr := strings.Split(messageText, "время")
 		
 		taskName := strings.Trim(arr[0], " ")
-		taskTime, err := time.Parse("15:04 02.01.2006", strings.Trim(arr[1], " "))
+		taskTime, err := time.ParseInLocation("15:04 02.01.2006", strings.Trim(arr[1], 	" "), time.Local)
 		if err != nil {
+			log.Info("failed to parse time", slog.String("time", strings.Trim(arr[1], " ")))
 			log.Error("failed to parse time", sl.Err(err))
 			
 			_, _ = bot.SendMessage(tu.Message(
@@ -57,11 +58,12 @@ func CreateTask (log *slog.Logger, repo event.Repository) func(bot *telego.Bot, 
 		task = entity.Event{
 			Title: taskName,
 			Time:  taskTime,
+			Status: "pending",
 		}
 
 		eService := service.NewEventService(task, repo)
 
-		useCase := usecase.SaveEvent{
+		useCase := save.SaveEvent{
 			EventService: eService,
 		}
 

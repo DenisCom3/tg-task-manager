@@ -6,10 +6,7 @@ type Event struct {
 	ID        *int
 	Title     string
 	Time      time.Time
+	Status    string     // "pending" or "sent"
 	// Owner     string
 	// IsDone    bool
-}
-
-func (e *Event) isActive() bool {
-	return e.Time.Before(time.Now())
 }

@@ -2,16 +2,20 @@ package main
 
 import (
 	"fmt"
+
+
 	"time-manager/internal/adapter/sqlite-repo/event"
+	"time-manager/internal/broadcaster"
+	"time-manager/internal/service"
+
 	"time-manager/internal/config"
+	"time-manager/internal/entity"
+
 	"time-manager/internal/handler/tg"
 	"time-manager/internal/logging"
 	"time-manager/internal/storage/sqlite"
 
 	"github.com/joho/godotenv"
-	"github.com/mymmrac/telego"
-	th "github.com/mymmrac/telego/telegohandler"
-	tu "github.com/mymmrac/telego/telegoutil"
 )
 
 func main() {
@@ -42,6 +46,13 @@ func run() error {
 	}
 
 	storage, err := sqlite.New(cfg.StoragePath)
+	defer func(storage *sqlite.Storage) error {
+		err := storage.Close()
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+		return nil
+	}(storage)
 
 	if err != nil {
 		return fmt.Errorf("%w", err)
@@ -49,46 +60,17 @@ func run() error {
 
 	repo := event.NewRepo(storage)
 
-	bot, err := telego.NewBot(cfg.TelegramToken, telego.WithDefaultDebugLogger())
+	_, err = tg.InitBotWithHandlers(cfg.TelegramToken, repo, log)
 
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	updates, err := bot.UpdatesViaLongPolling(nil)
+	service := service.NewEventService(entity.Event{}, repo)
 
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
+	go broadcaster.Start(service, log)
+	
 
-	// Create bot handler and specify from where to get updates
-	bh, _ := th.NewBotHandler(bot, updates)
-	defer bot.StopLongPolling()
-	defer bh.Stop()
-
-
-	bh.Handle(tg.Start(log), th.CommandEqual("start"))
-
-
-	bh.Handle(func(bot *telego.Bot, update telego.Update) {
-		// Send message
-		_, _ = bot.SendMessage(tu.Message(
-			tu.ID(update.Message.Chat.ID),
-			"Создайте задачу, написав её ниже. Пример: 'Помыть посуду в 21:00 02.01.2006'",
-		))
-	}, th.CommandEqual("create_task"))
-
-	bh.Handle(tg.CreateTask(log, repo), th.AnyMessage())
-
-	bh.HandleCallbackQuery(func(bot *telego.Bot, query telego.CallbackQuery) {
-		// Send message
-		_, _ = bot.SendMessage(tu.Message(tu.ID(query.Message.GetChat().ID), "GO GO GO"))
-
-		// Answer callback query
-		_ = bot.AnswerCallbackQuery(tu.CallbackQuery(query.ID).WithText("Done"))
-	}, th.AnyCallbackQueryWithMessage(), th.CallbackDataEqual("go"))
-
-	bh.Start()
-
+	
 	return nil
 }

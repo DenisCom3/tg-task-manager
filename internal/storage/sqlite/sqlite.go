@@ -26,7 +26,9 @@ func New(storagePath string) (*Storage, error) {
 	CREATE TABLE IF NOT EXISTS events(
 		id INTEGER PRIMARY KEY,
 		name TEXT NOT NULL UNIQUE,
-		time TIMESTAMP NOT NULL
+		time TIMESTAMP NOT NULL,
+		status TEXT NOT NULL,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
 	CREATE INDEX IF NOT EXISTS idx_name ON events(name);
 	`)
@@ -42,10 +44,10 @@ func New(storagePath string) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
-func (s *Storage) Save(name string, time time.Time) error {
+func (s *Storage) Save(name string, time time.Time, status string) error {
 	const op = "storage.sqlite.Create"
 
-	_, err := s.db.Exec("INSERT INTO events(name, time) VALUES (?, ?)", name, time)
+	_, err := s.db.Exec("INSERT INTO events(name, time, status) VALUES (?, ?, ?)", name, time, status)
 	if condition, ok := err.(*sqlite3.Error); ok && condition.Code == sqlite3.ErrConstraint {
 		return fmt.Errorf("%s: %w", op, storage.ErrAlreadyExists)
 	}
@@ -68,4 +70,35 @@ func (s *Storage) GetByName(name string) (entity.Event, error) {
 	
 	return entity.Event{ID: &id, Title: title, Time: time}, nil
 
+}
+
+func (s *Storage) GetAllWithStatus( status string) ([]entity.Event, error) {
+	const op = "storage.sqlite.GetAllWithStatus"
+	stmt, err := s.db.Prepare("SELECT id, name, time, status FROM events WHERE status = ? ORDER BY time ASC")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var entities []entity.Event = []entity.Event{}
+
+	rows, err := stmt.Query(status)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	for rows.Next() {
+		var event entity.Event
+		err = rows.Scan(&event.ID, &event.Title, &event.Time, &event.Status)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+
+		entities = append(entities, event)
+	}
+
+	return entities, nil
+}
+
+func (s *Storage) Close() error {
+	return s.db.Close()
 }
