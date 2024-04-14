@@ -5,10 +5,13 @@ import (
 	"sync"
 	"time"
 	"time-manager/internal/entity"
+	tu "github.com/mymmrac/telego/telegoutil"
+	"github.com/mymmrac/telego"
 )
 
 type EventService interface {
 	GetAllPendingTasks() ([]entity.Event, error)
+	Update(entity.Event) error
 }
 
 type NotifyEvent struct {
@@ -21,7 +24,7 @@ func New (eventService EventService) NotifyEvent {
 	}
 }
 
-func (n NotifyEvent) BeforeHour(e entity.Event) {
+func (n NotifyEvent) BeforeHour(e entity.Event, bot *telego.Bot) {
 	
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -31,7 +34,13 @@ func (n NotifyEvent) BeforeHour(e entity.Event) {
 	for {
 		fmt.Println("now",time.Now(), "event", e.Title, "|||", notifyTime, "|||", time.Now().After(notifyTime))
 		if time.Now().After(notifyTime) {
-			fmt.Println("event triggered 1 hour", e.Title)
+			
+			_, _ = bot.SendMessage(
+				tu.Message(
+					tu.ID(int64(e.ChatId)),
+					fmt.Sprintf("До события '%s' остался 1 час", e.Title),
+				),
+			)
 			wg.Done()
 			break
 		}
@@ -42,7 +51,7 @@ func (n NotifyEvent) BeforeHour(e entity.Event) {
 	wg.Wait()
 }
 
-func (n NotifyEvent) Before15Min(e entity.Event) {
+func (n NotifyEvent) Before15Min(e entity.Event, bot *telego.Bot) {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -51,6 +60,14 @@ func (n NotifyEvent) Before15Min(e entity.Event) {
 	for {
 		if time.Now().After(notifyTime) {
 			fmt.Println("event triggered 15 min", e.Title)
+			_, _ = bot.SendMessage(
+				tu.Message(
+					tu.ID(int64(e.ChatId)),
+					fmt.Sprintf("До события '%s' осталось 15 минут", e.Title),
+				),
+			)
+			e.Status = "sent"
+			n.Update(e)
 			wg.Done()
 			break
 		}

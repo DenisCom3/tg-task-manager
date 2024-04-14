@@ -38,6 +38,16 @@ func (e EventService) GetByName() (entity.Event, error) {
 	return event, nil
 }
 
+func (e EventService) Update(event entity.Event) error {
+
+	err := e.repo.Update(event)
+	if err != nil {
+		return err
+	}
+	return nil
+	
+}
+
 func (e EventService) GetAllPendingTasks() ([]entity.Event, error) {
 
 	events, err := e.repo.GetAllWithStatus("pending")

@@ -59,6 +59,7 @@ func CreateTask (log *slog.Logger, repo event.Repository) func(bot *telego.Bot, 
 			Title: taskName,
 			Time:  taskTime,
 			Status: "pending",
+			ChatId: int(update.Message.Chat.ID),
 		}
 
 		eService := service.NewEventService(task, repo)

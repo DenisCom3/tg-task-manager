@@ -9,31 +9,22 @@ import (
 
 )
 
-func InitBotWithHandlers (token string, repo event.Repository, log *slog.Logger) (*telego.Bot, error) {
+func Init(token string, repo event.Repository, log *slog.Logger) (*telego.Bot, *th.BotHandler, error) {
 	bot, err := telego.NewBot(token, telego.WithDefaultDebugLogger())
 
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, nil, fmt.Errorf("%w", err)
 	}
 
 	updates, err := bot.UpdatesViaLongPolling(nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w", err)
+	}
+	bh, err := th.NewBotHandler(bot, updates)
 
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, nil, fmt.Errorf("%w", err)
 	}
 
-	// Create bot handler and specify from where to get updates
-	bh, _ := th.NewBotHandler(bot, updates)
-	defer bot.StopLongPolling()
-	defer bh.Stop()
-
-
-	bh.Handle(Start(log), th.CommandEqual("start"))
-	bh.Handle(CreateTaskDescription(log), th.CommandEqual("create_task"))
-	bh.Handle(CreateTask(log, repo), th.AnyMessage())
-	// bh.Handle(tg.GetTask(log, repo), th.AnyMessage())
-
-	bh.Start()
-
-	return bot, nil
+	return bot, bh, nil
 }

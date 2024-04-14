@@ -16,6 +16,9 @@ import (
 	"time-manager/internal/storage/sqlite"
 
 	"github.com/joho/godotenv"
+	th "github.com/mymmrac/telego/telegohandler"
+
+
 )
 
 func main() {
@@ -60,16 +63,24 @@ func run() error {
 
 	repo := event.NewRepo(storage)
 
-	_, err = tg.InitBotWithHandlers(cfg.TelegramToken, repo, log)
+	bot, bh, err := tg.Init(cfg.TelegramToken, repo, log)
+	defer bot.StopLongPolling()
+
 
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
-
 	service := service.NewEventService(entity.Event{}, repo)
 
-	go broadcaster.Start(service, log)
-	
+	go broadcaster.Start(service, bot, log)
+
+	bh.Handle(tg.Start(log), th.CommandEqual("start"))
+	bh.Handle(tg.CreateTaskDescription(log), th.CommandEqual("create_task"))
+	bh.Handle(tg.CreateTask(log, repo), th.AnyMessage())
+	fmt.Println("started")
+	bh.Start()
+	defer bh.Stop()
+
 
 	
 	return nil
