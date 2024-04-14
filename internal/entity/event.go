@@ -7,7 +7,5 @@ type Event struct {
 	Title      string
 	Time       time.Time
 	Status     string     // "pending" or "sent"
-	ChatId int
-	// Owner     string
-	// IsDone    bool
+	ChatId     int
 }
