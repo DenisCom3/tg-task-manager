@@ -6,9 +6,11 @@ import (
 	"strings"
 	"time"
 	"time-manager/internal/adapter/sqlite-repo/event"
+	"time-manager/internal/broadcaster"
 	"time-manager/internal/entity"
 	"time-manager/internal/logging/sl"
 	"time-manager/internal/service"
+	"time-manager/internal/usecase/notify"
 	"time-manager/internal/usecase/save"
 
 	"github.com/mymmrac/telego"
@@ -84,5 +86,8 @@ func CreateTask (log *slog.Logger, repo event.Repository) func(bot *telego.Bot, 
 			tu.ID(update.Message.Chat.ID),
 			fmt.Sprintf("Создал задачу %s в %s", taskName, taskTime.Format("15:04 02.01.2006")),
 		))
+
+		broadcaster.CheckEventTimeAndHandle(task, bot, notify.New(eService))
 	}
 }
+

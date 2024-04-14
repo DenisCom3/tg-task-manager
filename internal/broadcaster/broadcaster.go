@@ -12,8 +12,6 @@ import (
 	"github.com/mymmrac/telego"
 )
 
-// TODO: реализовать проверку таски, добавленную в базу в Real-Time.
-// Так как броадкастер проверяет записи каждый час, реал тайм таска к моменту следующеё итерации может уже протухнуть
 func Start(s notify.EventService, bot *telego.Bot, log *slog.Logger) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error)
@@ -30,7 +28,7 @@ func Start(s notify.EventService, bot *telego.Bot, log *slog.Logger) error {
 			}
 
 			for _, event := range events {			
-				CheckEventTime(event, bot, notify)
+				CheckEventTimeAndHandle(event, bot, notify)
 			}
 			time.Sleep(1 * time.Hour)
 		}
@@ -49,7 +47,7 @@ func Start(s notify.EventService, bot *telego.Bot, log *slog.Logger) error {
 }
 
 
-func CheckEventTime(event entity.Event, bot *telego.Bot, notify notify.NotifyEvent) {
+func CheckEventTimeAndHandle(event entity.Event, bot *telego.Bot, notify notify.NotifyEvent) {
 	isBeforeHour := event.Time.Add(-1 * time.Hour).After(time.Now()) && time.Now().Add(2 * time.Hour).After(event.Time)
 	isBefore15Min := event.Time.Add(-15 * time.Minute).After(time.Now()) && time.Now().Add(1 * time.Hour).After(event.Time)
 	if isBeforeHour  {
