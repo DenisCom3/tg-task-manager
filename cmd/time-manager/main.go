@@ -1,8 +1,8 @@
 package main
 
 import (
+	"context"
 	"fmt"
-
 
 	"time-manager/internal/adapter/sqlite-repo/event"
 	"time-manager/internal/broadcaster"
@@ -17,22 +17,21 @@ import (
 
 	"github.com/joho/godotenv"
 	th "github.com/mymmrac/telego/telegohandler"
-
-
 )
 
 func main() {
-
-	err := run()
+	ctx, cancel := context.WithCancel(context.Background())
+	err := run(ctx)
 
 	if err != nil {
 		panic(err)
 	}
+
+	cancel()
 }
 
 
-func run() error {
-	
+func run(ctx context.Context) error {
 	err := godotenv.Load()
 
 	if err != nil {
@@ -72,7 +71,7 @@ func run() error {
 	}
 	service := service.NewEventService(entity.Event{}, repo)
 
-	go broadcaster.Start(service, bot, log)
+	go broadcaster.Start(ctx, service, bot, log)
 
 	bh.Handle(tg.Start(log), th.CommandEqual("start"))
 	bh.Handle(tg.CreateTaskDescription(log), th.CommandEqual("create_task"))

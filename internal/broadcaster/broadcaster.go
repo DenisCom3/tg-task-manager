@@ -1,9 +1,10 @@
 package broadcaster
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
-	"sync"
+	// "sync"
 	"time"
 	"time-manager/internal/entity"
 	"time-manager/internal/logging/sl"
@@ -12,30 +13,25 @@ import (
 	"github.com/mymmrac/telego"
 )
 
-func Start(s notify.EventService, bot *telego.Bot, log *slog.Logger) error {
-	var wg sync.WaitGroup
+func Start(ctx context.Context, s notify.EventService, bot *telego.Bot, log *slog.Logger) error {
+	ticker := time.NewTicker(1 * time.Hour)
 	errChan := make(chan error)
 	notify := notify.New(s)
-	wg.Add(1)
 	go func() {
+		CheckEvents(s, bot, log, notify, errChan)
+		tickerLoop:
 		for {
-			events, err := notify.EventService.GetAllPendingTasks()
-
-			if err != nil {
-				log.Error("failed to get all pending tasks", sl.Err(err))
-				errChan <- err
-				break
+			select {
+				case <-ticker.C:
+					CheckEvents(s, bot, log, notify, errChan)
+				case <-ctx.Done():
+					break tickerLoop
+				default:
+					continue
 			}
-
-			for _, event := range events {			
-				CheckEventTimeAndHandle(event, bot, notify)
-			}
-			time.Sleep(1 * time.Hour)
 		}
-		defer wg.Done()
 	}()
 
-	wg.Wait()
 
 	select {
 	case err := <-errChan:
@@ -44,6 +40,19 @@ func Start(s notify.EventService, bot *telego.Bot, log *slog.Logger) error {
 		return nil
 	}
 	
+}
+
+func CheckEvents( s notify.EventService, bot *telego.Bot, log *slog.Logger, notify notify.NotifyEvent, errChan chan error) {
+	
+	events, err := notify.EventService.GetAllPendingTasks()
+	if err != nil {
+		log.Error("failed to get all pending tasks", sl.Err(err))
+		errChan <- err
+	}
+
+	for _, event := range events {			
+		CheckEventTimeAndHandle(event, bot, notify)
+	}
 }
 
 
